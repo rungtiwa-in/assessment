@@ -8,7 +8,7 @@ import (
 	"os"
 
 	"github.com/labstack/echo"
-	_ "github.com/lib/pq"
+	"github.com/lib/pq"
 )
 
 type Err struct {
@@ -54,6 +54,7 @@ func main() {
 	e := echo.New()
 
 	e.GET("/health", healthHandler)
+	e.POST("/expenses", createExpenseHandler)
 
 	log.Println("Server started at :2565")
 	log.Fatal(e.Start(":2565"))
@@ -61,4 +62,21 @@ func main() {
 
 func healthHandler(c echo.Context) error {
 	return c.JSON(http.StatusOK, "OK")
+}
+
+func createExpenseHandler(c echo.Context) error {
+	ex := Expense{}
+	err := c.Bind(&ex)
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, Err{Message: err.Error()})
+	}
+
+	row := db.QueryRow("INSERT INTO expenses (title, amount, note, tags) values ($1, $2, $3, $4) RETURNING id, title, amount, note, tags;",
+		ex.Title, ex.Amount, ex.Note, pq.Array(&ex.Tags))
+	err = row.Scan(&ex.ID, &ex.Title, &ex.Amount, &ex.Note, pq.Array(&ex.Tags))
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, Err{Message: err.Error()})
+	}
+
+	return c.JSON(http.StatusCreated, ex)
 }
