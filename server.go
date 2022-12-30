@@ -29,6 +29,7 @@ func main() {
 	e.Use(middleware.Recover())
 
 	e.POST("/expenses", expense.CreateExpenseHandler)
+	e.GET("/expenses/:id", expense.GetExpenseHandler)
 
 	log.Println("Server started at :2565")
 	log.Fatal(e.Start(":2565"))
