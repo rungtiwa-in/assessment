@@ -1,5 +1,3 @@
-//go:build integration
-
 package expense
 
 import (
@@ -47,14 +45,41 @@ func TestGetExpenseByID(t *testing.T) {
 	assert.Equal(t, e.Title, latest.Title)
 	assert.Equal(t, e.Amount, latest.Amount)
 	assert.Equal(t, e.Note, latest.Note)
-	assert.Equal(t, e.Note, latest.Note)
+	assert.Equal(t, e.Tags, latest.Tags)
 	assert.NotEmpty(t, latest.Title)
 	assert.NotEmpty(t, latest.Amount)
 	assert.NotEmpty(t, latest.Note)
 	assert.NotEmpty(t, latest.Tags)
 }
 
-func seedExpense(t *testing.T) Expense {
+func TestUpdateExpenseByID(t *testing.T) {
+	ex := seedExpense(t)
+
+	body := bytes.NewBufferString(`{
+		"title": "apple smoothie",
+		"amount": 89,
+		"note": "no discount", 
+		"tags": ["beverage"]
+	}`)
+	var r Expense
+
+	res := request(http.MethodPut, uri("expenses", strconv.Itoa(ex.ID)), body)
+	err := res.Decode(&r)
+
+	assert.Nil(t, err)
+	assert.Equal(t, http.StatusOK, res.StatusCode)
+	assert.Equal(t, ex.ID, r.ID)
+	assert.Equal(t, "apple smoothie", r.Title)
+	assert.Equal(t, 89.0, r.Amount)
+	assert.Equal(t, "no discount", r.Note)
+	assert.Equal(t, []string{"beverage"}, r.Tags)
+	assert.NotEmpty(t, r.Title)
+	assert.NotEmpty(t, r.Amount)
+	assert.NotEmpty(t, r.Note)
+	assert.NotEmpty(t, r.Tags)
+}
+
+func seedExpense(t *testing.T) *Expense {
 	var ex Expense
 	body := bytes.NewBufferString(`{
 		"title": "strawberry smoothie",
@@ -66,7 +91,7 @@ func seedExpense(t *testing.T) Expense {
 	if err != nil {
 		t.Fatal("can't create expense:", err)
 	}
-	return ex
+	return &ex
 }
 
 func request(method, url string, body io.Reader) *Response {
