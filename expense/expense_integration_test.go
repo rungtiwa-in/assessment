@@ -79,6 +79,18 @@ func TestUpdateExpenseByID(t *testing.T) {
 	assert.NotEmpty(t, r.Tags)
 }
 
+func TestGetAllExpenseByID(t *testing.T) {
+	seedExpense(t)
+
+	var ex []Expense
+	res := request(http.MethodGet, uri("expenses"), nil)
+	err := res.Decode(&ex)
+
+	assert.Nil(t, err)
+	assert.EqualValues(t, http.StatusOK, res.StatusCode)
+	assert.Greater(t, len(ex), 0)
+}
+
 func seedExpense(t *testing.T) *Expense {
 	var ex Expense
 	body := bytes.NewBufferString(`{
