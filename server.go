@@ -30,6 +30,7 @@ func main() {
 
 	e.POST("/expenses", expense.CreateExpenseHandler)
 	e.GET("/expenses/:id", expense.GetExpenseHandler)
+	e.PUT("/expenses/:id", expense.UpdateExpenseHandler)
 
 	log.Println("Server started at :2565")
 	log.Fatal(e.Start(":2565"))
