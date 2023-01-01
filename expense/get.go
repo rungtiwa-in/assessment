@@ -27,3 +27,27 @@ func GetExpenseHandler(c echo.Context) error {
 		return c.JSON(http.StatusInternalServerError, Err{Message: "can't scan expenses:" + err.Error()})
 	}
 }
+
+func GetAllExpenseHandler(c echo.Context) error {
+	var exs = []Expense{}
+	stmt, err := db.Prepare("SELECT id, title, amount, note, tags FROM expenses")
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, Err{Message: "can't prepare query expenses statement:" + err.Error()})
+	}
+
+	rows, err := stmt.Query()
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, Err{Message: "can't get all expenses statement:" + err.Error()})
+	}
+
+	for rows.Next() {
+		var ex Expense
+		err := rows.Scan(&ex.ID, &ex.Title, &ex.Amount, &ex.Note, pq.Array(&ex.Tags))
+		if err != nil {
+			return err
+		}
+		exs = append(exs, ex)
+	}
+
+	return c.JSON(http.StatusOK, exs)
+}
