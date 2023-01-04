@@ -1,8 +1,12 @@
 package main
 
 import (
-	"log"
 	"net/http"
+
+	"context"
+	"os"
+	"os/signal"
+	"time"
 
 	"github.com/labstack/echo"
 	"github.com/labstack/echo/middleware"
@@ -33,6 +37,19 @@ func main() {
 	e.PUT("/expenses/:id", expense.UpdateExpenseHandler)
 	e.GET("/expenses", expense.GetAllExpenseHandler)
 
-	log.Println("Server started at :2565")
-	log.Fatal(e.Start(":2565"))
+	go func() {
+		if err := e.Start(os.Getenv("PORT")); err != nil && err != http.ErrServerClosed { // Start server
+			e.Logger.Fatal("shutting down the server")
+		}
+	}()
+
+	shutdown := make(chan os.Signal, 1)
+	signal.Notify(shutdown, os.Interrupt)
+	<-shutdown
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	if err := e.Shutdown(ctx); err != nil {
+		e.Logger.Fatal(err)
+	}
 }
