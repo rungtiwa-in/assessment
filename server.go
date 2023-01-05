@@ -11,6 +11,7 @@ import (
 	"github.com/labstack/echo"
 	"github.com/labstack/echo/middleware"
 	"github.com/rungtiwa-in/assessment/expense"
+	customMiddleware "github.com/rungtiwa-in/assessment/middleware"
 )
 
 func main() {
@@ -18,16 +19,7 @@ func main() {
 
 	e := echo.New()
 
-	e.Use(func(next echo.HandlerFunc) echo.HandlerFunc {
-		return func(c echo.Context) error {
-			auth := c.Request().Header.Get("Authorization")
-			if auth != "November 10, 2009" {
-				return c.JSON(http.StatusUnauthorized, "Unauthorized")
-			}
-
-			return next(c)
-		}
-	})
+	e.Use(customMiddleware.Authorization)
 
 	e.Use(middleware.Logger())
 	e.Use(middleware.Recover())
